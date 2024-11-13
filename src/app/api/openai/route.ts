@@ -6,6 +6,22 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
+// Helper function to check if an error has a response property with a status
+function isAxiosError(
+  error: unknown
+): error is { response: { status: number } } {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof (error as { response?: unknown }).response === "object" &&
+    (error as { response: { status?: unknown } }).response.status !==
+      undefined &&
+    typeof (error as { response: { status: unknown } }).response.status ===
+      "number"
+  )
+}
+
 export async function POST(req: Request) {
   try {
     if (!process.env.OPENAI_API_KEY) {
@@ -73,14 +89,19 @@ Please refine the following transcription while ensuring complete word-for-word 
         hasTimestamps: Boolean(timestamps),
       },
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Transcription refinement error:", error)
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred"
+    const statusCode = isAxiosError(error) ? error.response.status : 500
+
     return NextResponse.json(
       {
         error: "Failed to refine transcription",
-        details: error.message,
+        details: errorMessage,
       },
-      { status: error.response?.status || 500 }
+      { status: statusCode }
     )
   }
 }
