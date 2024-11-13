@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 
 interface TranscriptDisplayProps {
   title: string
@@ -9,53 +9,10 @@ const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
   title,
   text,
 }) => {
-  const [isSpeaking, setIsSpeaking] = useState(false)
   const [volume, setVolume] = useState(0.5)
-  const [autoSpeak, setAutoSpeak] = useState(false)
-
-  useEffect(() => {
-    if (autoSpeak && title === "Translated Text" && text) {
-      playAudio(text)
-    }
-  }, [text, autoSpeak, title])
-
-  const playAudio = async (content: string) => {
-    setIsSpeaking(true)
-    try {
-      const response = await fetch("/api/speak", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text: content }),
-      })
-
-      const data = await response.json()
-      if (data.audioContent) {
-        const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`)
-        audio.volume = volume
-        audio.onended = () => setIsSpeaking(false)
-        audio.play()
-      } else {
-        console.error("No audio content returned")
-        setIsSpeaking(false)
-      }
-    } catch (error) {
-      console.error("Error fetching audio:", error)
-      setIsSpeaking(false)
-    }
-  }
 
   const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setVolume(Number(event.target.value))
-  }
-
-  const handleToggleSpeak = () => {
-    if (title === "Translated Text") {
-      setAutoSpeak(!autoSpeak)
-    } else {
-      playAudio(text)
-    }
   }
 
   return (
@@ -64,22 +21,6 @@ const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
         <h2 className="text-xl sm:text-2xl font-semibold text-gray-700">
           {title}
         </h2>
-        <button
-          onClick={handleToggleSpeak}
-          disabled={isSpeaking && title === "Transcription"}
-          className={`px-3 sm:px-4 py-2 text-sm font-medium rounded-lg shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-            isSpeaking && title === "Transcription"
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-400"
-          }`}
-          aria-label="Speak or Play Audio"
-        >
-          {title === "Translated Text"
-            ? autoSpeak
-              ? "Do Not Speak"
-              : "Speak"
-            : "Play Audio"}
-        </button>
       </div>
 
       <div className="flex items-center space-x-2 sm:space-x-3">
@@ -100,7 +41,7 @@ const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
         />
       </div>
 
-      <div className="p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200  sm:h-44 overflow-y-auto shadow-inner">
+      <div className="p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200 sm:h-44 overflow-y-auto shadow-inner">
         {text ? (
           <p className="text-gray-800 text-sm sm:text-base leading-relaxed tracking-wide">
             {text}
