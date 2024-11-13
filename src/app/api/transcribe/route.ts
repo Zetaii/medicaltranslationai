@@ -1,6 +1,19 @@
 import { NextResponse } from "next/server"
 import axios from "axios"
 
+interface GoogleSpeechAlternative {
+  transcript: string
+  confidence: number
+}
+
+interface GoogleSpeechResult {
+  alternatives: GoogleSpeechAlternative[]
+}
+
+interface GoogleSpeechResponse {
+  results: GoogleSpeechResult[]
+}
+
 export async function POST(req: Request) {
   try {
     const { audioContent } = await req.json()
@@ -22,7 +35,6 @@ export async function POST(req: Request) {
       audio: { content: cleanedAudioContent },
       config: {
         encoding: "WEBM_OPUS",
-
         languageCode: "en-US",
         model: "phone_call",
         useEnhanced: true,
@@ -52,7 +64,7 @@ export async function POST(req: Request) {
     }
 
     // Google Speech-to-Text API call
-    const googleResponse = await axios.post(
+    const googleResponse = await axios.post<GoogleSpeechResponse>(
       `https://speech.googleapis.com/v1/speech:recognize?key=${process.env.GOOGLE_CLOUD_API_KEY}`,
       requestData,
       {
@@ -72,12 +84,8 @@ export async function POST(req: Request) {
     }
 
     const bestAlternative = googleResponse.data.results
-      .map((result: any) => result.alternatives[0])
-      .reduce(
-        (prev: any, curr: any) =>
-          curr.confidence > prev.confidence ? curr : prev,
-        { transcript: "", confidence: 0 }
-      )
+      .map((result) => result.alternatives[0])
+      .reduce((prev, curr) => (curr.confidence > prev.confidence ? curr : prev))
 
     if (!process.env.NEXT_PUBLIC_API_URL) {
       throw new Error("OpenAI API URL is not configured")
@@ -98,14 +106,23 @@ export async function POST(req: Request) {
       transcription: openAIResponse.data.refinedTranscription,
       confidence: bestAlternative.confidence,
     })
-  } catch (error: any) {
-    console.error("Transcription error:", error.response?.data || error.message)
+  } catch (error: unknown) {
+    console.error(
+      "Transcription error:",
+      (error as { response?: { data?: string } }).response?.data ||
+        (error as Error).message
+    )
     return NextResponse.json(
       {
         error: "Failed to transcribe audio. Please try again.",
-        details: error.response?.data || error.message,
+        details:
+          (error as { response?: { data?: string } }).response?.data ||
+          (error as Error).message,
       },
-      { status: error.response?.status || 500 }
+      {
+        status:
+          (error as { response?: { status?: number } }).response?.status || 500,
+      }
     )
   }
 }
