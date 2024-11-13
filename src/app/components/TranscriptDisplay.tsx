@@ -11,9 +11,8 @@ const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
 }) => {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [volume, setVolume] = useState(0.5)
-  const [autoSpeak, setAutoSpeak] = useState(false) // Toggle for translation auto-speak
+  const [autoSpeak, setAutoSpeak] = useState(false)
 
-  // Effect to play updated translation audio if autoSpeak is enabled
   useEffect(() => {
     if (autoSpeak && title === "Translated Text" && text) {
       playAudio(text)
@@ -60,13 +59,15 @@ const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
   }
 
   return (
-    <section className="p-8 mt-12 space-y-6 bg-gray-400 rounded-xl shadow-md max-w-lg border border-gray-300">
+    <section className="p-4 sm:p-8 mt-6 space-y-4 sm:space-y-6 bg-gray-400 rounded-xl shadow-md max-w-full sm:max-w-lg border border-gray-300">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-gray-700">{title}</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-700">
+          {title}
+        </h2>
         <button
           onClick={handleToggleSpeak}
           disabled={isSpeaking && title === "Transcription"}
-          className={`px-4 py-2 text-sm font-medium rounded-lg shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+          className={`px-3 sm:px-4 py-2 text-sm font-medium rounded-lg shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
             isSpeaking && title === "Transcription"
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-400"
@@ -81,7 +82,7 @@ const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
         </button>
       </div>
 
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-2 sm:space-x-3">
         <label htmlFor="volume" className="text-sm font-medium text-gray-600">
           Volume:
         </label>
@@ -99,9 +100,11 @@ const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
         />
       </div>
 
-      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 h-44 overflow-y-auto shadow-inner">
+      <div className="p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200  sm:h-44 overflow-y-auto shadow-inner">
         {text ? (
-          <p className="text-gray-800 leading-relaxed tracking-wide">{text}</p>
+          <p className="text-gray-800 text-sm sm:text-base leading-relaxed tracking-wide">
+            {text}
+          </p>
         ) : (
           <p className="text-gray-400 italic">Text will appear here</p>
         )}
